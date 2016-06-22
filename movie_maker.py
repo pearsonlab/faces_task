@@ -1,15 +1,20 @@
 import numpy as np
 import pandas as pd
 import matplotlib
-matplotlib.use("Agg")
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+matplotlib.use("SVG")
+from matplotlib.backends.backend_svg import FigureCanvasSVG as FigureCanvas
 from matplotlib.figure import Figure
 import matplotlib.animation as animation
 
 import scipy.io as sio
+from scipy.signal import savgol_filter
 import os
 
 import argparse
+
+# Local smooth on the x and y dimensions (numpy and pandas) a simple boxcar (average over a running window)
+
+# White dots on a black background
 
 # Required:
 # 	- Change the emotions variable in load_mat to match the MATLAB file that it comes from
@@ -28,9 +33,6 @@ def load_mat(filename):
 	landmarks = pd.DataFrame(landmarks)
 	
 	return landmarks, emots
-
-
-# Check out rle in physutils in cleaning.py
 	
 def rle(emots):
         """ run length encoding. 
@@ -62,11 +64,18 @@ def setup_movie_writer():
 	
 	return writer
 
+def filter_landmarks(landmarks):
+	filtered_data = landmarks.copy()
+	for i in range(len(landmarks)):
+		filtered_data.iloc[i] = savgol_filter(landmarks.iloc[i], 11, 2)
+	return filtered_data
+	
 def make_emotion_movie(landmarks, emots, filename, emotion_name, emotion_num, coords, writer):
     fig = Figure()
     canvas = FigureCanvas(fig)
     ax = fig.add_subplot(111)
-    
+    fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=None, hspace=None)
+
     fig.gca().invert_yaxis()
     
     filename = os.path.basename(filename)
@@ -78,14 +87,16 @@ def make_emotion_movie(landmarks, emots, filename, emotion_name, emotion_num, co
     
     name = filename+'_'+emotion_name+emotion_num+'.mp4'
 	
-    with writer.saving(fig, newpath+'/'+name, 100):
+    with writer.saving(fig, newpath+'/'+name, 300):
         for i in range(coords[1], coords[1]+coords[0]): #coords = (length, start, value)
             ax.set_xticks([])
             ax.set_yticks([])
-            ax.scatter(landmarks[i][0:48], landmarks[i][49:97])
+            ax.set_axis_bgcolor('black')
+            ax.scatter(landmarks[i][0:48], landmarks[i][49:97], color='white')
             writer.grab_frame()
             ax.cla()
-
+	print name
+	
 def make_movies(landmarks, emots, long, writer, filename):
 	counters = np.ones(5) # angry, disgust, happy, sad, neutral
 	
@@ -118,4 +129,5 @@ if __name__ == "__main__":
 			continue
 		long = find_long_segments(segments, args.target)
 		writer = setup_movie_writer()
-		make_movies(landmarks, emots, long, writer, file)
+		filtered_data = filter_landmarks(landmarks)
+		make_movies(filtered_data, emots, long, writer, file)
