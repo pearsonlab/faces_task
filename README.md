@@ -4,5 +4,5 @@ Runs from command line. Arguments are Files to process (should be matlab files, 
 
 Requirements:
 
-- Create 'movies' directory in folder for script to save movies to. Movies will be saved, categorized by emotion, labeled with source file and number (not required to create emotion files before running script).
+- Movies will be saved, categorized by emotion, labeled with source file and number (not required to create movies or emotion dirs before running script).
 - Change variable 'emots' to match emotions label in matlab files. Two options in most files, and another, unique option in first files sent.
