@@ -114,6 +114,7 @@ def play_through_movies(win, files, timing, keymap, participant, delay):
 			win.flip()
 			trial['response'] = 'timeout'
 			trial['time_of_resp'] = 'timeout'
+			trial['corr_resp'] = False
 		elif 'escape' in key:
 			flicker(win, 0)
 			core.quit()
@@ -202,27 +203,29 @@ def run():
 	globalTimer = core.Clock()
 	start_time = globalTimer.getTime()
 	day_time = core.getAbsTime()
+	
 	save_data(day_time, start_time, participant)
 	
 	# Wait	
 	win.flip()
 	core.wait(delay)
 	win.flip()
-	
+
+	# Import movies	
 	files = {}
-	# Import movies
 	for num, emotion in list(enumerate(emotions)):
 		files[emotion] = [f for f in listdir('movies/'+emotion) 
 							if isfile(join('movies/'+emotion, f))
 							if f.endswith('.mp4')]
 	
 	files['sn'] = files['sad']+files['neutral']
+	
 	# Play movies and save data
 	play_through_movies(win, files, timing, keymap, participant, delay)
+	core.wait(delay)
 
-	
 	# Exit		
-	text_and_stim_keypress(win, "You're finished!!\n\n" +
+	text_and_stim_keypress(win, "You're finished!\n\n" +
 								'(Press any key to exit)')
 	core.quit()
 	
