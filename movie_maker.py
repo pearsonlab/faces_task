@@ -1,9 +1,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib
-matplotlib.use("SVG")
-from matplotlib.backends.backend_svg import FigureCanvasSVG as FigureCanvas
-from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
 import scipy.io as sio
@@ -47,12 +45,11 @@ def rle(emots):
 
 # segments = (run length, startpositions, values) of emotions
 
-def find_long_segments(segments, target_length, neut_len):
+def find_long_segments(segments, target_length):
 	long = []
 	for i in range(len(segments[0])):
 		
 		# Is segment of video long enough?
-		
 		if (segments[0][i] > target_length):
 			long.append((segments[0][i], segments[1][i], segments[2][i]))
 			
@@ -60,7 +57,7 @@ def find_long_segments(segments, target_length, neut_len):
 
 def setup_movie_writer():
 	FFMpegWriter = animation.writers['ffmpeg']
-	writer = FFMpegWriter(fps=15)
+	writer = FFMpegWriter(fps=15, bitrate=1000)
 	
 	return writer
 
@@ -71,13 +68,6 @@ def filter_landmarks(landmarks):
 	return filtered_data
 	
 def make_emotion_movie(landmarks, emots, filename, emotion_name, emotion_num, coords, writer):
-    fig = Figure()
-    canvas = FigureCanvas(fig)
-    ax = fig.add_subplot(111)
-    fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=None, hspace=None)
-
-    fig.gca().invert_yaxis()
-    
     filename = os.path.basename(filename)
     filename = filename.strip('.mat')
     newpath = 'movies/'+emotion_name
@@ -86,17 +76,31 @@ def make_emotion_movie(landmarks, emots, filename, emotion_name, emotion_num, co
     	os.makedirs(newpath)
     
     name = filename+'_'+emotion_name+emotion_num+'.mp4'
-    print name
+    
+    # Used for replacing old videos if parameters have changed
+    #if not os.path.isfile(newpath+'/'+name):
+    #	return
+    
+    fig = plt.figure()
+    ax = fig.add_subplot(111, axisbg = 'black')
+    fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=None, hspace=None)
 
-    with writer.saving(fig, newpath+'/'+name, 300):
-        for i in range(coords[1], coords[1]+coords[0]): #coords = (length, start, value)
-            ax.set_xticks([])
-            ax.set_yticks([])
-            ax.set_axis_bgcolor('black')
-            ax.scatter(landmarks[i][0:48], landmarks[i][49:97], color='white')
-            writer.grab_frame()
-            ax.cla()
-	
+    fig.gca().invert_yaxis()
+    
+   	with writer.saving(fig, newpath+'/'+name, 150):
+       	for i in range(coords[1], coords[1]+coords[0]): #coords = (length, start, value)
+       		ax.set_xticks([])
+       		ax.set_yticks([])
+       		ax.set_axis_bgcolor('black')
+       		ax.scatter(landmarks[i][0:48], landmarks[i][49:97], color='white')
+       		writer.grab_frame()
+       		ax.cla()
+    
+    print name
+    
+    else:
+    	plt.close()
+
 def make_movies(landmarks, emots, long, writer, filename):
 	counters = np.ones(5) # angry, disgust, happy, sad, neutral
 	
@@ -108,64 +112,40 @@ def make_movies(landmarks, emots, long, writer, filename):
 			counters[emotion-1] += 1
 			make_emotion_movie(landmarks, emots, filename, emotion_name, emotion_num, long[i], writer)
 		else:
-			raise Error('Something is wrong with the data. :-/')
+			raise ValueError('Something is wrong with the data. :-/')
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description = "Make movie-emotion files from .mat files")
 	parser.add_argument('files', nargs='+',
 						help="Files from which to produce movies"
 						)
-	parser.add_argument('-tl', '--target_length', dest='target', type=int, default=30, 
+	parser.add_argument('target', type=int, default=30, 
 						help="Target length for emotion frames cutoff"
-						)
-	parser.add_argument('-n', '--neutral_length', dest='neut_len', type=int, default=0, 
-						help="Length of neutral before emotion"
 						)
 
 	args = parser.parse_args()
 	
 	for file in args.files:
-		print file
-		#if args.files.index(file) < args.files.index('rand_001/00120.mat'):
+		## Since this takes forever on the huge directory of 700 files, specify start
+		## and end positions with these two, if desired, by uncommenting.
+		# Start
+		#if args.files.index(file) < args.files.index('rand_001/00010.mat'):
 		#	continue
-		
+		# End
+		#if args.files.index(file) > args.files.index('rand_001/00311.mat'):
+		#	break
+		print file
+
 		landmarks, emots = load_mat(file)
 		segments = rle(emots)
 		
 		if type(segments[0]) == type(None):
 			continue
 		
-		long = find_long_segments(segments, args.target, args.neut_len)
+		long = find_long_segments(segments, args.target)
 		if not any(long):
 			continue
 		
 		writer = setup_movie_writer()
 		filtered_data = filter_landmarks(landmarks)
 		make_movies(filtered_data, emots, long, writer, file)
-
-'''
-# Non-working version of finding neutral segments preceding video
-def find_long_segments(segments, target_length, neut_len):
-	long = []
-	for i in range(len(segments[0])):
-		
-		# Is segment of video long enough?
-		# And preceded by X seconds of neutral video? (Can comment out to just find emotion videos)
-		# Neut_len/fps (usually 15) is seconds of neutral video preceding
-		#if i < neut_len:
-		#	continue
-		
-		#neutral_amount = 0.
-		#for val in segments[2][i-neut_len:i]:
-		#	if val == 5.0:
-		#		neutral_amount += 1
-		
-		if (segments[0][i] > target_length): # and (neutral_amount/neut_len >= 0.5):
-			long.append((segments[0][i], segments[1][i], segments[2][i]))
-	
-	# (np.array_equal(segments[2][i-neut_len:i], np.full(neut_len, 5.))):
-	# Need to remove neut_len if commenting out preceding neutral video
-	# long.append((segments[0][i] + neut_len, segments[1][i-neut_len], segments[2][i]))	
-	
-	return long
-'''
