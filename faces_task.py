@@ -54,7 +54,7 @@ def text(win, text):
 
 def play_movie(win, movie, timing):
 	mov = visual.MovieStim3(win, 'movies/'+movie, size=[1080,637.5],
-                       flipVert=False, flipHoriz=False, loop=True)
+                       flipVert=False, flipHoriz=False, loop=False)
 	
 	timer = core.CountdownTimer(timing)
 	mov_start = core.getTime()
@@ -148,14 +148,12 @@ def play_through_movies(win, files, timing, keymap, participant, delay):
 		
 		if trial['time_of_resp'] != 'timeout':
 			trial['resp_time'] = time_of_resp - quest_start
-		
-		
-		print trial
-		
+				
 		with open('behavioral/faces_task_'+ participant + '.json', 'a') as f:
 			f.write(json.dumps(trial))
 			f.write('\n')
 		
+		print trial['trail_num'], trial['type'], trial['response'], trial['corr_resp']
 		core.wait(delay)	
 
 									
@@ -173,7 +171,7 @@ def get_settings():
     dlg = gui.Dlg(title='Choose Settings')
     dlg.addText('Biological Motion Task', color="Blue")
     dlg.addField('Subject ID:', 'practice')
-    dlg.addField('Movie Timing:', 2)
+    dlg.addField('Movie Timing:', 5)
     dlg.addField('Delay:', 3)
     dlg.show()
     if dlg.OK:
