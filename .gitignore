@@ -2,6 +2,8 @@ movies/
 rand_001/
 old_movies/
 *.mat
+behavioral/
+.DS_Store
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
