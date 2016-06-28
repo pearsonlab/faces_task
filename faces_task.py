@@ -163,6 +163,9 @@ def save_data(day_time, start_time, participant):
 	info['day_time'] = day_time
 	info['start_time'] = start_time
 	
+	if not os.path.exists('behavioral/'):
+		os.makedirs('behavioral')
+	
 	with open('behavioral/faces_task_'+ participant + '.json', 'a') as f:
 		f.write(json.dumps(info))
 		f.write('\n')
