@@ -78,16 +78,16 @@ def make_emotion_movie(landmarks, emots, filename, emotion_name, emotion_num, co
     name = filename+'_'+emotion_name+emotion_num+'.mp4'
     
     # Used for replacing old videos if parameters have changed
+    # Must indent all lines below until else: statement
     #if not os.path.isfile(newpath+'/'+name):
     #	return
     
     fig = plt.figure()
     ax = fig.add_subplot(111, axisbg = 'black')
     fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=None, hspace=None)
-
     fig.gca().invert_yaxis()
     
-   	with writer.saving(fig, newpath+'/'+name, 150):
+    with writer.saving(fig, newpath+'/'+name, 150):
        	for i in range(coords[1], coords[1]+coords[0]): #coords = (length, start, value)
        		ax.set_xticks([])
        		ax.set_yticks([])
@@ -98,8 +98,9 @@ def make_emotion_movie(landmarks, emots, filename, emotion_name, emotion_num, co
     
     print name
     
-    else:
-    	plt.close()
+    # See above- Used for replacing old videos
+    #else:
+    #	plt.close()
 
 def make_movies(landmarks, emots, long, writer, filename):
 	counters = np.ones(5) # angry, disgust, happy, sad, neutral
@@ -129,7 +130,7 @@ if __name__ == "__main__":
 		## Since this takes forever on the huge directory of 700 files, specify start
 		## and end positions with these two, if desired, by uncommenting.
 		# Start
-		#if args.files.index(file) < args.files.index('rand_001/00010.mat'):
+		#if args.files.index(file) < args.files.index('rand_001/00288.mat'):
 		#	continue
 		# End
 		#if args.files.index(file) > args.files.index('rand_001/00311.mat'):
