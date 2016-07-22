@@ -96,6 +96,7 @@ def make_emotion_movie(landmarks, emots, filename, emotion_name, emotion_num, co
        		writer.grab_frame()
        		ax.cla()
     
+    plt.close(fig)
     print name
     
     # See above- Used for replacing old videos
@@ -130,10 +131,10 @@ if __name__ == "__main__":
 		## Since this takes forever on the huge directory of 700 files, specify start
 		## and end positions with these two, if desired, by uncommenting.
 		# Start
-		#if args.files.index(file) < args.files.index('rand_001/00288.mat'):
+		#if args.files.index(file) < args.files.index('rand_001/00009.mat'):
 		#	continue
 		# End
-		#if args.files.index(file) > args.files.index('rand_001/00311.mat'):
+		#if args.files.index(file) > args.files.index('rand_001/00009.mat'):
 		#	break
 		print file
 
