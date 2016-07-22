@@ -60,7 +60,7 @@ def play_example(win, movie, timing):
 
 def play_movie(win, movie, timing):
 	mov = visual.MovieStim3(win, 'movies/'+movie, size=[1080,637.5],
-                       flipVert=False, flipHoriz=False, loop=False)
+                       flipVert=False, flipHoriz=False, loop=False, noAudio=True)
 	
 	timer = core.CountdownTimer(timing)
 	mov_start = core.getTime()
