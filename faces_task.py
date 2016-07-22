@@ -79,10 +79,16 @@ def play_through_movies(win, files, timing, keymap, participant, num_movies, del
 	num_sad = len(files['sad'])
 		
 	options = np.random.randint(3, size=num_movies)
-
+	
+	temp = num_movies
+	if num_sad<num_movies or num_happy<num_movies or num_neut<num_movies:
+		num_movies = min(num_happy, num_neut, num_sad)
+	
 	happy_opt = np.random.choice(range(num_happy), size=num_movies, replace=False)
 	neut_opt = np.random.choice(range(num_neut), size=num_movies, replace=False)
 	sad_opt = np.random.choice(range(num_sad), size=num_movies, replace=False)
+	
+	num_movies = temp
 	
 	happy_count = 0
 	neut_count = 0
@@ -193,7 +199,7 @@ def get_settings():
     dlg.addText('Biological Motion Task', color="Blue")
     dlg.addField('Subject ID:', 'practice')
     dlg.addField('Number of Movies:', 25)
-    dlg.addField('Movie Timing:', 5)
+    dlg.addField('Movie Timing:', 3)
     dlg.addField('Delay:', 3)
     dlg.show()
     if dlg.OK:
@@ -245,7 +251,7 @@ def run():
 	neut_text.autoDraw = False
 	win.flip()
 	win.flip()
-	text_and_stim_keypress(win, "Press UP for negative emotion")
+	text_and_stim_keypress(win, "Press UP for neutral emotion")
 	core.wait(delay)
 	
 	text_and_stim_keypress(win, "Ready?\n\n" +
