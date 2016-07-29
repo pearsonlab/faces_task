@@ -198,7 +198,7 @@ def get_settings():
     dlg = gui.Dlg(title='Choose Settings')
     dlg.addText('Biological Motion Task', color="Blue")
     dlg.addField('Subject ID:', 'practice')
-    dlg.addField('Number of Movies:', 25)
+    dlg.addField('Number of Movies:', 66)
     dlg.addField('Movie Timing:', 3)
     dlg.addField('Delay:', 3)
     dlg.show()
