@@ -4,13 +4,13 @@ import numpy as np
 def flicker(win, value):
     """
     Send a binary signal (value) to the photodiode by flickering a white
-    circle in the bottom right hand corner.
+    circle in the upper right hand corner.
     """
     timer = core.Clock()
-    circle = visual.Circle(win, units='height', radius=0.05,
+    circle = visual.Circle(win, units='height', radius=0.04,
                             fillColorSpace='rgb255',
                             lineColorSpace='rgb255',
-                            fillColor=(0, 0, 0), pos=(0.73, 0.42),
+                            fillColor=(0, 0, 0), pos=(0.84, 0.44),
                             lineColor=(0, 0, 0))
     value = np.binary_repr(value)
     # zero pad to 8 bits and add stop and start bits
@@ -30,5 +30,3 @@ def flicker(win, value):
     win.flip(clearBuffer=False)
     circle.draw()
     return timer.getTime()
-
-# 0, 1, 4, 16
