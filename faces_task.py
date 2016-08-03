@@ -65,15 +65,16 @@ def play_movie(win, movie, timing):
     timer = core.CountdownTimer(timing)
     mov_start = core.getTime()
     flicker(win, 1)
+    win.flip()
     event.clearEvents(eventType='keyboard')
 
     while mov.status != visual.FINISHED and timer.getTime()>0:
         mov.draw()
-        win.flip()
-
+        win.flip(clearBuffer=False)
+        
     return mov_start
 
-def play_through_movies(win, files, timing, keymap, participant, num_movies, delay):
+def play_through_movies(win, files, timing, keymap, participant, num_movies, resp_time, delay):
     num_happy = len(files['happy'])
     num_neut = len(files['neutral'])
     num_sad = len(files['sad'])
@@ -120,17 +121,18 @@ def play_through_movies(win, files, timing, keymap, participant, num_movies, del
             trial['type'] = 'sad'
             trial['origin_file'] = files['sad'][sad_opt[sad_count]]
 
-        text_object = text(win, "                      Neutral\n\n\n\nPositive                                 Negative")
+        text_object = text(win, "Positive                                Neutral                                 Negative")
+        text_object.pos= (0, -0.9)
         quest_start = core.getTime()
-        win.flip()
         offset = flicker(win, 4)
         key = event.waitKeys(
-                    maxWait=delay - offset)
-
+                    maxWait=resp_time - offset)
+        text_object.autoDraw = False
+        win.clearBuffer()
+        win.flip()
+        win.flip()
+            
         if key is None:
-            text_object.autoDraw = False
-            win.flip()
-            win.flip()
             trial['response'] = 'timeout'
             trial['time_of_resp'] = 'timeout'
             trial['corr_resp'] = False
@@ -138,9 +140,6 @@ def play_through_movies(win, files, timing, keymap, participant, num_movies, del
             flicker(win, 0)
             core.quit()
         else:
-            text_object.autoDraw = False
-            win.flip()
-            win.flip()
             time_of_resp = core.getTime()
             offset = flicker(win, 16)
             trial['response'] = key[0]
@@ -151,7 +150,7 @@ def play_through_movies(win, files, timing, keymap, participant, num_movies, del
                     trial['corr_resp'] = True
                 else:
                     trial['corr_resp'] = False
-            elif trial['response'] == 'up':
+            elif trial['response'] == 'down':
                 if trial['type'] == 'neutral':
                     trial['corr_resp'] = True
                 else:
@@ -196,11 +195,12 @@ def save_data(day_time, start_time, participant):
 
 def get_settings():
     dlg = gui.Dlg(title='Choose Settings')
-    dlg.addText('Biological Motion Task', color="Blue")
+    dlg.addText('Faces Task', color="Blue")
     dlg.addField('Subject ID:', 'practice')
     dlg.addField('Number of Movies:', 66)
     dlg.addField('Movie Timing:', 3)
-    dlg.addField('Delay:', 3)
+    dlg.addField('Response Time:', 8)
+    dlg.addField('Delay:', 2)
     dlg.show()
     if dlg.OK:
         return dlg.data
@@ -208,7 +208,7 @@ def get_settings():
         sys.exit()
 
 def run():
-    participant, num_movies, timing, delay = get_settings()
+    participant, num_movies, timing, resp_time, delay = get_settings()
 
     keymap = {'left': 1, 'right': 0}
 
@@ -222,36 +222,43 @@ def run():
                                 '		   (Press any key to continue)')
     text_and_stim_keypress(win, "When the movie finishes playing:\n\n      -Press the LEFT arrow key if the face showed a positive emotion" +
                                 "\n\n      -Press the RIGHT arrow key if the face showed a negative emotion" +
-                                "\n\n      -Press the UP arrow key if the face showed a neutral emotion")
+                                "\n\n      -Press the DOWN arrow key if the face showed a neutral emotion")
     text_and_stim_keypress(win, "Here are some examples...\n\n")
+    win.flip()
 
     # 2-happy, 1-sad, 0-neutral,
     examples = [f for f in listdir('movies/examples/')
                     if isfile(join('movies/examples/', f))
                     if f.endswith('.mp4')]
 
-    happy_text = text(win, "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nPositive")
-    play_example(win, examples[2], timing)
+    happy_text = text(win, "\n\n\n\n\n\n\n\n\n\n\n\n\nPositive")
+    happy_mov = [ex for ex in examples if 'happy' in ex][0]
+    play_example(win, happy_mov, timing)
     happy_text.autoDraw = False
     win.flip()
     win.flip()
     text_and_stim_keypress(win, "Press LEFT for positive emotion")
+    win.flip()
     core.wait(delay)
 
-    sad_text = text(win, "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nNegative")
-    play_example(win, examples[1], timing)
+    sad_text = text(win, "\n\n\n\n\n\n\n\n\n\n\n\n\nNegative")
+    sad_mov = [ex for ex in examples if 'sad' in ex][0]
+    play_example(win, sad_mov, timing)
     sad_text.autoDraw = False
     win.flip()
     win.flip()
     text_and_stim_keypress(win, "Press RIGHT for negative emotion")
+    win.flip()
     core.wait(delay)
 
-    neut_text = text(win, "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nNeutral")
-    play_example(win, examples[0], timing)
+    neut_text = text(win, "\n\n\n\n\n\n\n\n\n\n\n\n\nNeutral")
+    neut_mov = [ex for ex in examples if 'neutral' in ex][0]
+    play_example(win, neut_mov, timing)
     neut_text.autoDraw = False
     win.flip()
     win.flip()
-    text_and_stim_keypress(win, "Press UP for neutral emotion")
+    text_and_stim_keypress(win, "Press DOWN for neutral emotion")
+    win.flip()
     core.wait(delay)
 
     text_and_stim_keypress(win, "Ready?\n\n" +
@@ -279,7 +286,7 @@ def run():
 
 
     # Play movies and save data
-    play_through_movies(win, files, timing, keymap, participant, num_movies, delay)
+    play_through_movies(win, files, timing, keymap, participant, num_movies, resp_time, delay)
     core.wait(delay)
 
     # Exit
