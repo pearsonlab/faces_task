@@ -183,8 +183,8 @@ def play_through_movies(win, files, timing, keymap, participant, num_movies, res
 def save_data(day_time, start_time, participant):
 
     info = {}
-    info['day_time'] = day_time
-    info['start_time'] = start_time
+    info['wall_time'] = day_time
+    info['psychopy_time'] = start_time
 
     if not os.path.exists('behavioral/'):
         os.makedirs('behavioral')
@@ -267,8 +267,8 @@ def run():
     # Starting timers and save initial information
     globalTimer = core.Clock()
     start_time = globalTimer.getTime()
-    day_time = core.getAbsTime()
-
+    t = datetime.now()
+    day_time = '%d:%d:%d:%d' % (t.hour, t.minute, t.second, t.microsecond)
     save_data(day_time, start_time, participant)
 
     # Wait
@@ -292,6 +292,13 @@ def run():
     # Exit
     text_and_stim_keypress(win, "You're finished!\n\n" +
                                 '(Press any key to exit)')
+                                
+    # Save end data
+    t = datetime.now()
+    day_time = '%d:%d:%d:%d' % (t.hour, t.minute, t.second, t.microsecond)
+    end_time = globalTimer.getTime()
+    save_data(day_time, end_time, participant)
+    
     core.quit()
 
 if __name__ == '__main__':
