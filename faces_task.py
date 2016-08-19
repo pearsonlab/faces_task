@@ -7,7 +7,7 @@ from os.path import isfile, join
 import numpy as np
 from datetime import datetime
 
-from utils import flicker
+from utils import Flicker
 
 
 emotions = ['happy',
@@ -46,36 +46,39 @@ def text(win, text):
 
     return display_text
 
-def play_example(win, movie, timing):
+def play_example(win, movie, timing, trigger=None):
     mov = visual.MovieStim3(win, 'movies/examples/'+movie, size=[1080,637.5],
                        flipVert=False, flipHoriz=False, loop=False, noAudio=True)
 
     timer = core.CountdownTimer(timing)
     mov_start = core.getTime()
-    flicker(win, 1)
+    if trigger:
+        trigger.flicker(1)
     event.clearEvents(eventType='keyboard')
 
     while mov.status != visual.FINISHED and timer.getTime()>0:
         mov.draw()
         win.flip()
 
-def play_movie(win, movie, timing):
+def play_movie(win, movie, timing, trigger=None):
     mov = visual.MovieStim3(win, 'movies/'+movie, size=[1080,637.5],
                        flipVert=False, flipHoriz=False, loop=False, noAudio=True)
 
     timer = core.CountdownTimer(timing)
     mov_start = core.getTime()
-    flicker(win, 1)
-    win.flip()
+    if trigger:
+        trigger.flicker(1)
     event.clearEvents(eventType='keyboard')
 
     while mov.status != visual.FINISHED and timer.getTime()>0:
         mov.draw()
         win.flip(clearBuffer=False)
         
-    return mov_start
+    last_frame = visual.BufferImageStim(win, buffer='front', rect=(-.8, 0.8, 0.8, -0.8))
+    last_frame.autoDraw=True
+    return mov_start, last_frame
 
-def play_through_movies(win, files, timing, keymap, participant, num_movies, resp_time, delay):
+def play_through_movies(win, files, timing, trigger, keymap, participant, num_movies, resp_time, delay):
     num_happy = len(files['happy'])
     num_neut = len(files['neutral'])
     num_sad = len(files['sad'])
@@ -107,17 +110,17 @@ def play_through_movies(win, files, timing, keymap, participant, num_movies, res
             break
 
         if val == 0:
-            mov_start = play_movie(win, 'happy/'+files['happy'][happy_opt[happy_count]], timing)
+            mov_start, last_frame = play_movie(win, 'happy/'+files['happy'][happy_opt[happy_count]], timing, trigger)
             happy_count += 1
             trial['type'] = 'happy'
             trial['origin_file'] = files['happy'][happy_opt[happy_count]]
         elif val == 1:
-            mov_start = play_movie(win, 'neutral/'+files['neutral'][neut_opt[neut_count]], timing)
+            mov_start, last_frame = play_movie(win, 'neutral/'+files['neutral'][neut_opt[neut_count]], timing, trigger)
             neut_count += 1
             trial['type'] = 'neutral'
             trial['origin_file'] = files['neutral'][neut_opt[neut_count]]
         else:
-            mov_start = play_movie(win, 'sad/'+files['sad'][sad_opt[sad_count]], timing)
+            mov_start, last_frame = play_movie(win, 'sad/'+files['sad'][sad_opt[sad_count]], timing, trigger)
             sad_count += 1
             trial['type'] = 'sad'
             trial['origin_file'] = files['sad'][sad_opt[sad_count]]
@@ -125,9 +128,9 @@ def play_through_movies(win, files, timing, keymap, participant, num_movies, res
         text_object = text(win, "Positive                                Neutral                                 Negative")
         text_object.pos= (0, -0.9)
         quest_start = core.getTime()
-        offset = flicker(win, 4)
-        key = event.waitKeys(
-                    maxWait=resp_time - offset)
+        trigger.flicker_block(170)
+        key = event.waitKeys(maxWait=resp_time)
+        last_frame.autoDraw = False
         text_object.autoDraw = False
         win.clearBuffer()
         win.flip()
@@ -138,11 +141,11 @@ def play_through_movies(win, files, timing, keymap, participant, num_movies, res
             trial['time_of_resp'] = 'timeout'
             trial['corr_resp'] = False
         elif 'escape' in key:
-            flicker(win, 0)
+            trigger.flicker_block(0)
             core.quit()
         else:
             time_of_resp = core.getTime()
-            offset = flicker(win, 16)
+            trigger.flicker_block(16)
             trial['response'] = key[0]
             trial['time_of_resp'] = time_of_resp
 
@@ -217,6 +220,7 @@ def run():
     win = visual.Window(winType='pyglet', monitor="testMonitor", units="pix", screen=1,
             fullscr=True, colorSpace='rgb255', color=(0, 0, 0))
     win.mouseVisible = False
+    trigger = Flicker(win)
 
     # Instructions
     text_and_stim_keypress(win, "You are going to be watching movies of faces.\n\n" +
@@ -234,7 +238,7 @@ def run():
 
     happy_text = text(win, "\n\n\n\n\n\n\n\n\n\n\n\n\nPositive")
     happy_mov = [ex for ex in examples if 'happy' in ex][0]
-    play_example(win, happy_mov, timing)
+    play_example(win, happy_mov, timing, trigger)
     happy_text.autoDraw = False
     win.flip()
     win.flip()
@@ -244,7 +248,7 @@ def run():
 
     sad_text = text(win, "\n\n\n\n\n\n\n\n\n\n\n\n\nNegative")
     sad_mov = [ex for ex in examples if 'sad' in ex][0]
-    play_example(win, sad_mov, timing)
+    play_example(win, sad_mov, timing, trigger)
     sad_text.autoDraw = False
     win.flip()
     win.flip()
@@ -254,7 +258,7 @@ def run():
 
     neut_text = text(win, "\n\n\n\n\n\n\n\n\n\n\n\n\nNeutral")
     neut_mov = [ex for ex in examples if 'neutral' in ex][0]
-    play_example(win, neut_mov, timing)
+    play_example(win, neut_mov, timing, trigger)
     neut_text.autoDraw = False
     win.flip()
     win.flip()
@@ -287,7 +291,7 @@ def run():
 
 
     # Play movies and save data
-    play_through_movies(win, files, timing, keymap, participant, num_movies, resp_time, delay)
+    play_through_movies(win, files, timing, trigger, keymap, participant, num_movies, resp_time, delay)
     core.wait(delay)
 
     # Exit
