@@ -30,6 +30,12 @@ def text_and_stim_keypress(win, text, stim=None):
         win.flip()
         key = event.waitKeys()
         if key[0] == 'escape':
+            # Save end data
+            
+            t = datetime.now()
+            day_time = '%d:%d:%d:%d' % (t.hour, t.minute, t.second, t.microsecond)
+            end_time = globalTimer.getTime()
+            save_data(day_time, end_time, participant)
             core.quit()
             win.flip()
         win.flip()
@@ -142,6 +148,13 @@ def play_through_movies(win, files, timing, trigger, keymap, participant, num_mo
             trial['corr_resp'] = False
         elif 'escape' in key:
             trigger.flicker_block(0)
+            
+            # Save end data
+            t = datetime.now()
+            day_time = '%d:%d:%d:%d' % (t.hour, t.minute, t.second, t.microsecond)
+            end_time = globalTimer.getTime()
+            save_data(day_time, end_time, participant)
+
             core.quit()
         else:
             time_of_resp = core.getTime()
@@ -270,6 +283,7 @@ def run():
                                 'Press any key to begin!')
 
     # Starting timers and save initial information
+    global globalTimer
     globalTimer = core.Clock()
     start_time = globalTimer.getTime()
     t = datetime.now()
