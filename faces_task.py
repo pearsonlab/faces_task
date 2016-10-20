@@ -58,8 +58,6 @@ def play_example(win, movie, timing, trigger=None):
 
     timer = core.CountdownTimer(timing)
     mov_start = core.getTime()
-    if trigger:
-        trigger.flicker(1)
     event.clearEvents(eventType='keyboard')
 
     while mov.status != visual.FINISHED and timer.getTime()>0:
