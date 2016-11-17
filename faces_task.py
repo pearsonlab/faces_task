@@ -141,8 +141,10 @@ def play_through_movies(win, files, timing, trigger, keymap, participant, num_mo
         win.flip()
             
         if key is None:
+            time_of_resp = core.getTime()
+            trigger.flicker_block(32)
             trial['response'] = 'timeout'
-            trial['time_of_resp'] = 'timeout'
+            trial['time_of_resp'] = time_of_resp
             trial['corr_resp'] = False
         elif 'escape' in key:
             trigger.flicker_block(0)
@@ -183,9 +185,7 @@ def play_through_movies(win, files, timing, trigger, keymap, participant, num_mo
         trial['mov_start'] = mov_start
         trial['quest_start'] = quest_start
 
-
-        if trial['time_of_resp'] != 'timeout':
-            trial['resp_time'] = time_of_resp - quest_start
+        trial['resp_time'] = time_of_resp - quest_start
 
         with open('behavioral/faces_task_'+ participant + '.json', 'a') as f:
             f.write(json.dumps(trial))
