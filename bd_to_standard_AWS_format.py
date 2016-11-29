@@ -112,7 +112,7 @@ if __name__ == "__main__":
 
 
         blocks = open_to_blocks(file)
-        blocks_cut, start_time, stop_time = chop_blocks(int(begin), int(end), blocks, keep)
+        blocks_cut, start_time, stop_time = chop_blocks(int(begin), end, blocks, keep)
         save_file(expname, sid, start_time, stop_time, day, blocks_cut)
         print '\n'
 
